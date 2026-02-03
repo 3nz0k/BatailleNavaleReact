@@ -1,0 +1,38 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  border-color: aqua;
+  width: 800px;
+  height: 800px;
+  gap: 5px;
+}
+
+.cell {
+  background-color: rgb(110, 110, 110);
+  border: 2px solid black;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell-clicked {
+  background-color: rgb(0, 0, 110);
+}
+
+.cell-shooted{
+  background-color: rgb(80, 0, 0);
+
+}
+
+.cell-broke {
+  background-color: rgb(26, 25, 25);
+}
