@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+
 import "./App.css";
+
+import GameInfo from "./components/GameInfo/GameInfo";
 
 function App() {
   const [click, setClick] = useState([]);
@@ -13,14 +16,18 @@ function App() {
 
   const [maxHits, setMaxHits] = useState(70);
 
-  // Vérifie si des cellules sont déjà occupées
+  /**
+   * Vérifie si des cellules sont déjà occupées
+   */
   function isCellsFree(cells) {
     return !cells.some((cell) =>
       ships.some((ship) => ship.cells.includes(cell)),
     );
   }
 
-  // Place un navire aléatoirement (horizontal uniquement)
+  /**
+   *  Place un navire aléatoirement (horizontal uniquement)
+   */
   function placeShip(ship) {
     let dir = Math.floor(Math.random() * 2); // 0 = horizontal, 1 = vertical
     let valueV, valueH, start, newCells;
@@ -98,6 +105,7 @@ function App() {
             return (
               <div
                 key={index}
+                data-index={index}
                 className={`cell ${clicked ? "cell-clicked" : ""} ${clicked && ship ? "cell-shooted" : ""} ${clicked && ship && broke ? "cell-broke" : ""}`}
                 onClick={() => {
                   if (!clicked) {
@@ -116,15 +124,7 @@ function App() {
             );
           })}
         </div>
-        <div className="boats">
-          {ships.map((ship) => (
-            <p key={ship.name}>
-              {ship.name} : <b>{ship.broke ? "Coulé" : "En vie"}</b>
-            </p>
-          ))}
-
-          <p>Coups Restant : {maxHits}</p>
-        </div>
+        <GameInfo ships={ships} maxHits={maxHits}></GameInfo>
       </div>
     </div>
   );
