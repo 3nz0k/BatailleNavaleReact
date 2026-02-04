@@ -3,195 +3,119 @@ import "./App.css";
 
 function App() {
   const [click, setClick] = useState([]);
-  const [porteAvionsCells, setPorteAvionsCells] = useState([]);
-  const [croiseurCells, setcroiseurCells] = useState([]);
-  const [contreTorpilleurCells, setcontreTorpilleurCells] = useState([]);
-  const [sousMarinCells, setsousMarinCells] = useState([]);
-  const [torpilleurCells, settorpilleurCells] = useState([]);
+  const [ships, setShips] = useState([
+    { name: "Porte-avions", size: 5, cells: [], hits: [], broke: false },
+    { name: "Croiseur", size: 4, cells: [], hits: [], broke: false },
+    { name: "Contre-torpilleur", size: 3, cells: [], hits: [], broke: false },
+    { name: "Sous-marin", size: 3, cells: [], hits: [], broke: false },
+    { name: "Torpilleur", size: 2, cells: [], hits: [], broke: false },
+  ]);
 
-  const [pAisBroke, setPAisBroke] = useState(false);
-  const [cisBroke, setcisBroke] = useState(false);
-  const [cTisBroke, setcTisBroke] = useState(false);
-  const [sMisBroke, setsMisBroke] = useState(false);
-  const [tisBroke, settisBroke] = useState(false);
+  // Vérifie si des cellules sont déjà occupées
+  function isCellsFree(cells) {
+    return !cells.some((cell) =>
+      ships.some((ship) => ship.cells.includes(cell)),
+    );
+  }
 
-  const ships = [
-    {
-      name: "Porte-avions",
-      size: 5,
-      cells: [3, 4, 5, 6, 7],
-      broke: false,
-    },
-    {
-      name: "Croiseur",
-      size: 4,
-      cells: [84, 85, 86, 87],
-      broke: false,
-    },
-    {
-      name: "Contre-torpilleur",
-      size: 3,
-      cells: [44, 45, 46],
-      broke: false,
-    },
-    {
-      name: "Sous-marin",
-      size: 3,
-      cells: [61, 62, 63],
-      broke: false,
-    },
-    {
-      name: "Torpilleur",
-      size: 2,
-      cells: [28, 29],
-      broke: false,
-    },
-  ];
+  // Place un navire aléatoirement (horizontal uniquement)
+  function placeShip(ship) {
+    let dir = Math.floor(Math.random() * 2); // 0 = horizontal, 1 = vertical
+    let valueV, valueH, start, newCells;
+    do {
+      if (dir === 0) {
+        valueV = Math.floor(Math.random() * 10);
+        valueH = Math.floor(Math.random() * (10 - ship.size));
+        start = valueV * 10 + valueH;
+        newCells = Array.from({ length: ship.size }, (_, i) => start + i);
+      } else if (dir === 1) {
+        valueV = Math.floor(Math.random() * (10 - ship.size));
+        valueH = Math.floor(Math.random() * 10);
+        start = valueV * 10 + valueH;
+        newCells = Array.from({ length: ship.size }, (_, i) => start + i * 10);
+      }
+    } while (!isCellsFree(newCells));
+    ship.cells = newCells;
+  }
+
+  // Initialisation des navires
+  useEffect(() => {
+    const newShips = [...ships];
+    newShips.forEach((ship) => placeShip(ship));
+    setShips(newShips);
+  }, []);
 
   function isClicked(index) {
     return click.includes(index);
   }
 
   function isShip(index) {
-    let ship = ships.find((s) => s.cells.includes(index));
-    return ship;
+    return ships.find((s) => s.cells.includes(index));
   }
 
-  function getShipName(index) {
-    const ship = ships.find((s) => s.cells.includes(index));
-    return ship ? ship.name : null;
-  }
+  function allShootOnShip(index) {
+    setShips((prevShips) => {
+      const nextShips = prevShips.map((ship) => {
+        if (!ship.cells.includes(index)) return ship;
 
-  function getShipSize(index) {
-    const ship = ships.find((s) => s.cells.includes(index));
-    return ship ? ship.size : null;
-  }
+        // évite les doublons si jamais
+        const nextHits = ship.hits.includes(index)
+          ? ship.hits
+          : [...ship.hits, index];
 
-  function getShipIsBroke(name) {
-    if (name === "Porte-avions") {
-      return pAisBroke;
-    }
+        const isBroke = ship.cells.every((cell) => nextHits.includes(cell));
 
-    if (name === "Croiseur") {
-      return cisBroke;
-    }
-
-    if (name === "Contre-torpilleur") {
-      return cTisBroke;
-    }
-
-    if (name === "Sous-marin") {
-      return sMisBroke;
-    }
-
-    if (name === "Torpilleur") {
-      return tisBroke;
-    }
-  }
-
-  function allShipDead() {
-    if (
-      pAisBroke == true &&
-      cisBroke == true &&
-      cTisBroke == true &&
-      sMisBroke == true &&
-      tisBroke == true
-    ) {
-      alert("Vous avez gagné !");
-    }
-  }
-
-  function allShootOnShip(name, index) {
-    if (name === "Porte-avions") {
-      const ship = ships.find((ship) => ship.name === "Porte-avions");
-
-      setPorteAvionsCells((prevCell) => {
-        const next = [...prevCell, index].sort();
-        if (ship.cells.every((cell) => next.includes(cell))) {
-          console.log("Porte-avions coulé !");
-          setPAisBroke(true);
+        if (!ship.broke && isBroke) {
+          console.log(`${ship.name} coulé !`);
         }
-        return next;
+
+        return {
+          ...ship,
+          hits: nextHits,
+          broke: isBroke,
+        };
       });
-    }
 
-    if (name === "Croiseur") {
-      const ship = ships.find((ship) => ship.name === "Croiseur");
+      // check victoire ici (avec le state à jour)
+      const win = nextShips.every((s) => s.broke);
+      if (win) alert("Vous avez gagné !");
 
-      setcroiseurCells((prevCell) => {
-        const next = [...prevCell, index].sort();
-        if (ship.cells.every((cell) => next.includes(cell))) {
-          console.log("Croiseur coulé !");
-          setcisBroke(true);
-        }
-        return next;
-      });
-    }
-
-    if (name === "Contre-torpilleur") {
-      const ship = ships.find((ship) => ship.name === "Contre-torpilleur");
-
-      setcontreTorpilleurCells((prevCell) => {
-        const next = [...prevCell, index].sort();
-        if (ship.cells.every((cell) => next.includes(cell))) {
-          console.log("Contre-torpilleur coulé !");
-          setcTisBroke(true);
-        }
-        return next;
-      });
-    }
-
-    if (name === "Sous-marin") {
-      const ship = ships.find((ship) => ship.name === "Sous-marin");
-
-      setsousMarinCells((prevCell) => {
-        const next = [...prevCell, index].sort();
-        if (ship.cells.every((cell) => next.includes(cell))) {
-          console.log("Sous-marin coulé !");
-          setsMisBroke(true);
-        }
-        return next;
-      });
-    }
-
-    if (name === "Torpilleur") {
-      const ship = ships.find((ship) => ship.name === "Torpilleur");
-
-      settorpilleurCells((prevCell) => {
-        const next = [...prevCell, index].sort();
-        if (ship.cells.every((cell) => next.includes(cell))) {
-          console.log("Torpilleur coulé !");
-          settisBroke(true);
-        }
-        return next;
-      });
-    }
+      return nextShips;
+    });
   }
 
   return (
     <div>
       <h1>Bataille Navale</h1>
-      <div className="grid">
-        {Array.from({ length: 100 }).map((_, index) => {
-          const clicked = isClicked(index);
-          const ship = isShip(index);
-          const broke = getShipIsBroke(getShipName(index));
-          return (
-            <div
-              key={index}
-              className={`cell ${clicked ? "cell-clicked" : ""} ${clicked && ship ? "cell-shooted" : ""} ${clicked && ship && broke ? "cell-broke" : ""}`}
-              onClick={() => {
-                if (!clicked) {
-                  setClick([...click, index]);
-                  allShootOnShip(getShipName(index), index);
-                  allShipDead();
-                }
-              }}
-            >
-              {index}
-            </div>
-          );
-        })}
+      <div className="main">
+        <div className="grid">
+          {Array.from({ length: 100 }).map((_, index) => {
+            const clicked = isClicked(index);
+            const ship = isShip(index);
+            const broke = ship ? ship.broke : false;
+            return (
+              <div
+                key={index}
+                className={`cell ${clicked ? "cell-clicked" : ""} ${clicked && ship ? "cell-shooted" : ""} ${clicked && ship && broke ? "cell-broke" : ""}`}
+                onClick={() => {
+                  if (!clicked) {
+                    setClick((prev) => [...prev, index]);
+                    allShootOnShip(index);
+                  }
+                }}
+              >
+                {index}
+              </div>
+            );
+          })}
+        </div>
+        <div className="boats">
+          {ships.map((ship) => (
+            <p key={ship.name}>
+              {ship.name} : <b>{ship.broke ? "Coulé" : "En vie"}</b>
+            </p>
+          ))}
+        </div>
       </div>
     </div>
   );
