@@ -11,6 +11,8 @@ function App() {
     { name: "Torpilleur", size: 2, cells: [], hits: [], broke: false },
   ]);
 
+  const [maxHits, setMaxHits] = useState(70);
+
   // Vérifie si des cellules sont déjà occupées
   function isCellsFree(cells) {
     return !cells.some((cell) =>
@@ -99,8 +101,13 @@ function App() {
                 className={`cell ${clicked ? "cell-clicked" : ""} ${clicked && ship ? "cell-shooted" : ""} ${clicked && ship && broke ? "cell-broke" : ""}`}
                 onClick={() => {
                   if (!clicked) {
-                    setClick((prev) => [...prev, index]);
-                    allShootOnShip(index);
+                    if (maxHits > 0) {
+                      setMaxHits(maxHits - 1);
+                      setClick((prev) => [...prev, index]);
+                      allShootOnShip(index);
+                    } else {
+                      alert("Vous avez perdu !");
+                    }
                   }
                 }}
               >
@@ -115,6 +122,8 @@ function App() {
               {ship.name} : <b>{ship.broke ? "Coulé" : "En vie"}</b>
             </p>
           ))}
+
+          <p>Coups Restant : {maxHits}</p>
         </div>
       </div>
     </div>
